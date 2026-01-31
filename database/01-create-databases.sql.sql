@@ -1,0 +1,5 @@
+docker exec -it postgres-db psql -U postgres -c "CREATE DATABASE postgres_timecard;"
+docker exec -it postgres-db psql -U postgres -c "CREATE DATABASE postgres_expense;"
+docker exec -it postgres-db psql -U postgres -c "CREATE DATABASE postgres_user;"
+docker exec -it postgres-db psql -U postgres -c "CREATE DATABASE postgres_invoice;"
+docker exec -it postgres-db psql -U postgres -c "CREATE DATABASE postgres_monolith;"
