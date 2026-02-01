@@ -13,6 +13,11 @@ services:
       - workflow360-postgres-data:/var/lib/postgresql/data
     networks:
       - workflow360-net
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   user-service:
     image: workflow360-user-service:latest
@@ -22,12 +27,53 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - postgres-db
+      postgres-db:
+        condition: service_healthy
+    networks:
+      - workflow360-net
+
+  timecard-service:
+    image: workflow360-timecard-service:latest
+    container_name: timecard-service
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+    ports:
+      - "8081:8080"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    networks:
+      - workflow360-net
+  expense-service:
+    image: workflow360-expense-service:latest
+    container_name: expense-service
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+    ports:
+      - "8082:8080"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    networks:
+      - workflow360-net
+  
+  invoice-service:
+    image: workflow360-invoice-service:latest
+    container_name: invoice-service
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+    ports:
+      - "8083:8080"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
     networks:
       - workflow360-net
 
 volumes:
   workflow360-postgres-data:
+    external: true
+    name: docker-workflow360-postgres-data
 
 networks:
   workflow360-net:
