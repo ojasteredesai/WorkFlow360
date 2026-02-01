@@ -1,0 +1,45 @@
+name: Invoice Service – Release Docker Image
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Extract version and commit SHA
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          VERSION=${TAG_NAME#v}
+          SHORT_SHA=$(git rev-parse --short HEAD)
+
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "SHA_TAG=sha-$SHORT_SHA" >> $GITHUB_ENV
+
+      - name: Login to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login \
+            -u "${{ secrets.DOCKER_USERNAME }}" \
+            --password-stdin
+
+      - name: Build Docker image
+        run: |
+          IMAGE=${{ secrets.DOCKER_NAMESPACE }}/invoice-service
+
+          docker build -t $IMAGE:${{ env.VERSION }} services/invoice-service
+          docker tag   $IMAGE:${{ env.VERSION }} $IMAGE:${{ env.SHA_TAG }}
+          docker tag   $IMAGE:${{ env.VERSION }} $IMAGE:latest
+
+      - name: Push Docker images
+        run: |
+          IMAGE=${{ secrets.DOCKER_NAMESPACE }}/invoice-service
+
+          docker push $IMAGE:${{ env.VERSION }}
+          docker push $IMAGE:${{ env.SHA_TAG }}
+          docker push $IMAGE:latest

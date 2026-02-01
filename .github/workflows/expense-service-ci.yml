@@ -1,0 +1,20 @@
+name: Expense Service – CI
+
+on:
+  push:
+    paths:
+      - "services/expense-service/**"
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image (CI validation only)
+        run: |
+          docker build \
+            -t expense-service-ci:${{ github.sha }} \
+            services/expense-service

@@ -33,7 +33,7 @@ services:
       - workflow360-net
 
   timecard-service:
-    image: workflow360-timecard-service:latest
+    image: ${TIMECARD_SERVICE_IMAGE}
     container_name: timecard-service
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
@@ -45,7 +45,7 @@ services:
     networks:
       - workflow360-net
   expense-service:
-    image: workflow360-expense-service:latest
+    image: ${EXPENSE_SERVICE_IMAGE}
     container_name: expense-service
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
@@ -58,7 +58,7 @@ services:
       - workflow360-net
   
   invoice-service:
-    image: workflow360-invoice-service:latest
+    image: ${INVOICE_SERVICE_IMAGE}
     container_name: invoice-service
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
