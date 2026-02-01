@@ -21,7 +21,16 @@ jobs:
 
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "SHA_TAG=sha-$SHORT_SHA" >> $GITHUB_ENV
-
+       
+      - name: Debug Docker username (safe)
+        run: |
+          if [ -z "${{ secrets.DOCKER_USERNAME }}" ]; then
+            echo "DOCKER_USERNAME is EMPTY"
+            exit 1
+          else
+            echo "DOCKER_USERNAME is set"
+          fi
+          
       - name: Login to Docker Hub
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login \
