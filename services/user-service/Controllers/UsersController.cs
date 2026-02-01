@@ -64,7 +64,6 @@ public class UsersController : ControllerBase
         return user == null ? NotFound() : Ok(user);
     }
 
-
     // POST /api/users
     [HttpPost]
     public async Task<IActionResult> CreateUser(CreateUserDto dto)

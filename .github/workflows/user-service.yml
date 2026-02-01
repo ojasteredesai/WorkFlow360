@@ -17,7 +17,7 @@ jobs:
         run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build Docker image
-        run: docker build -t workflow360/user-service:${{ github.sha }} services/user-service
+        run: docker build -t ojasteredesai/user-service:${{ github.sha }} services/user-service
 
       - name: Push Docker image
-        run: docker push workflow360/user-service:${{ github.sha }}
+        run: docker push ojasteredesai/user-service:${{ github.sha }}
