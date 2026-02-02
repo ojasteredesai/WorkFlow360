@@ -1,9 +1,9 @@
-name: Expense Service – CI
+name: VMS Service – CI
 
 on:
   push:
     paths:
-      - "services/expense-service/**"
+      - "services/vms-service/**"
 
 jobs:
   ci:
@@ -16,5 +16,5 @@ jobs:
       - name: Build Docker image (CI validation only)
         run: |
           docker build \
-            -t expense-service-ci:${{ github.sha }} \
-            services/expense-service
+            -t vms-service-ci:${{ github.sha }} \
+            services/vms-service

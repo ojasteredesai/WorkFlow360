@@ -70,6 +70,19 @@ services:
     networks:
       - workflow360-net
 
+  vms-service:
+    image: ${VMS_SERVICE_IMAGE}
+    container_name: vms-service
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+    ports:
+      - "8084:8080"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    networks:
+      - workflow360-net
+
 volumes:
   workflow360-postgres-data:
     external: true
