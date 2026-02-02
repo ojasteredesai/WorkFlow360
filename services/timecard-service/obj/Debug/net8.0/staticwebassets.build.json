@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "Y4V7B+ldU9TFjhwJFgqVG+gqxO8AFksiqxwVwtIh4rE=",
+  "Source": "timecard-service",
+  "BasePath": "_content/timecard-service",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

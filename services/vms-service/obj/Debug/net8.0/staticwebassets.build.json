@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "fqnU6Pe64tAaJfF8q39RlrNMmSwvninWDLR7g7sDp/U=",
+  "Source": "vms-service",
+  "BasePath": "_content/vms-service",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
