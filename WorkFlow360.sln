@@ -6,7 +6,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "services", "services", "{58
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "user-service", "user-service", "{894F4CE1-B484-F744-A4B2-6323977B165A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "user-service", "services\user-service\user-service\user-service.csproj", "{6FB859E5-60C8-5D42-CA2B-E29CF4DD97D4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "user-service", "services/user-service/user-service.csproj", "{6FB859E5-60C8-5D42-CA2B-E29CF4DD97D4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
