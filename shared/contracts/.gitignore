@@ -1,0 +1,6 @@
+# Ignore build artifacts and IDE files
+bin/
+obj/
+.vs/
+.vscode/
+.DS_Store

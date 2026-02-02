@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\build\vms-service.props" />
-</Project>

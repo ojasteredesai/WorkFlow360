@@ -1,0 +1,3 @@
+# Ignore local docker env files
+.env
+docker-compose.override.yml
