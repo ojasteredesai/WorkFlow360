@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TimecardService.Data;
+using TimecardService.Messaging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +15,8 @@ builder.Configuration
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
+builder.Services.AddMessaging(builder.Configuration);
+
 
 var app = builder.Build();
 

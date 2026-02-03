@@ -19,6 +19,20 @@ services:
       timeout: 5s
       retries: 5
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - workflow360-net
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5      
+
   user-service:
     image: ${USER_SERVICE_IMAGE}
     container_name: user-service
@@ -37,10 +51,16 @@ services:
     container_name: timecard-service
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
+      RabbitMq__HostName: rabbitmq
+      RabbitMq__Port: 5672
+      RabbitMq__UserName: guest
+      RabbitMq__Password: guest
     ports:
       - "8081:8080"
     depends_on:
       postgres-db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - workflow360-net

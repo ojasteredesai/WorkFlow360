@@ -23,7 +23,7 @@ public class Timecard
     public int TotalHours { get; set; }
 
     [Column("status")]
-    public string Status { get; set; } = string.Empty;
+    public string Status { get; set; } = "CREATED";
 
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }
