@@ -73,7 +73,7 @@ public class TimecardsController : ControllerBase
         {
             Id = Guid.NewGuid(),
             EventType = evt.EventType,
-            Payload = JsonSerializer.Serialize(evt),
+            Payload = JsonSerializer.SerializeToElement(evt),
             OccurredAt = evt.OccurredAt,
             ProcessedAt = null
         };

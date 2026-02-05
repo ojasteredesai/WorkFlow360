@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -58,7 +59,7 @@ public class OutboxPublisherService : BackgroundService
             {
                 await publisher.PublishAsync(
                     routingKey: "timecard.created",
-                    message: JsonDocument.Parse(evt.Payload).RootElement
+                    message: Encoding.UTF8.GetBytes(evt.Payload.ToString() ?? string.Empty)
                 );
 
                 evt.ProcessedAt = DateTime.UtcNow;
