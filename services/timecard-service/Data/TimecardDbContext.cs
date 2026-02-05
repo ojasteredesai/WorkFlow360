@@ -9,6 +9,8 @@ public class TimecardDbContext : DbContext
         : base(options) { }
 
     public DbSet<Timecard> Timecards => Set<Timecard>();
+    public DbSet<EventOutbox> EventOutbox => Set<EventOutbox>();
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

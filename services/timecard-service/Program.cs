@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using TimecardService.BackgroundServices;
 using TimecardService.Data;
 using TimecardService.Messaging;
 
@@ -16,7 +17,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 builder.Services.AddMessaging(builder.Configuration);
-
+builder.Services.AddHostedService<OutboxPublisherService>();
 
 var app = builder.Build();
 

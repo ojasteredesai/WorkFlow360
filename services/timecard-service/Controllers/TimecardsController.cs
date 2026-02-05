@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TimecardService.Data;
@@ -37,7 +38,11 @@ public class TimecardsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(CreateTimecardDto dto)
     {
-        var tc = new Timecard
+        if (dto.TotalHours < 0)
+            return BadRequest("Total hours cannot be negative");
+
+        // 1️⃣ Build Timecard
+        var timecard = new Timecard
         {
             Id = Guid.NewGuid(),
             WorkerId = dto.WorkerId,
@@ -49,39 +54,61 @@ public class TimecardsController : ControllerBase
             UpdatedAt = DateTime.UtcNow
         };
 
-        _db.Timecards.Add(tc);
-
-        try
-        {
-            await _db.SaveChangesAsync();
-        }
-        catch (DbUpdateException)
-        {
-            tc = await _db.Timecards.FirstAsync(t =>
-                t.WorkerId == dto.WorkerId &&
-                t.ProjectId == dto.ProjectId &&
-                t.WeekStart == dto.WeekStart);
-        }
-
-        // 🔑 EVENT PUBLISH HAPPENS *AFTER* DB COMMIT
+        // 2️⃣ Build Event (domain fact)
         var evt = new TimecardCreatedEvent
         {
             EventId = Guid.NewGuid(),
-            TimecardId = tc.Id,
-            WorkerId = tc.WorkerId,
-            ProjectId = tc.ProjectId,
-            WeekStart = tc.WeekStart,
-            TotalHours = tc.TotalHours,
-            OccurredAt = DateTime.UtcNow
+            EventType = "TimecardCreated",
+            EventVersion = 1,
+            OccurredAt = DateTime.UtcNow,
+            TimecardId = timecard.Id,
+            WorkerId = timecard.WorkerId,
+            ProjectId = timecard.ProjectId,
+            WeekStart = timecard.WeekStart,
+            TotalHours = timecard.TotalHours
         };
 
-        await _eventPublisher.PublishAsync(
-            routingKey: "timecard.created",
-            message: evt);
+        // 3️⃣ Build Outbox entry
+        var outbox = new EventOutbox
+        {
+            Id = Guid.NewGuid(),
+            EventType = evt.EventType,
+            Payload = JsonSerializer.Serialize(evt),
+            OccurredAt = evt.OccurredAt,
+            ProcessedAt = null
+        };
 
-        return Ok(new { id = tc.Id });
+        // 4️⃣ SAME TRANSACTION
+        using var tx = await _db.Database.BeginTransactionAsync();
+
+        try
+        {
+            _db.Timecards.Add(timecard);
+            _db.EventOutbox.Add(outbox);
+
+            await _db.SaveChangesAsync();
+            await tx.CommitAsync();
+        }
+        catch (DbUpdateException)
+        {
+            await tx.RollbackAsync();
+
+            // Idempotent retry handling
+            var existing = await _db.Timecards.FirstAsync(t =>
+                t.WorkerId == dto.WorkerId &&
+                t.ProjectId == dto.ProjectId &&
+                t.WeekStart == dto.WeekStart);
+
+            return Ok(new { id = existing.Id });
+        }
+
+        return CreatedAtAction(nameof(Get), new { id = timecard.Id }, new
+        {
+            id = timecard.Id
+        });
     }
-    
+
+
     [HttpPut("{id}/status")]
     public async Task<IActionResult> UpdateStatus(Guid id, UpdateStatusDto dto)
     {
