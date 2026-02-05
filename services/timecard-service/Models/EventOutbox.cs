@@ -23,4 +23,8 @@ public class EventOutbox
 
     [Column("processed_at")]
     public DateTime? ProcessedAt { get; set; }
+
+    [Column("locked_at")]
+    public DateTime? LockedAt { get; set; }
+
 }

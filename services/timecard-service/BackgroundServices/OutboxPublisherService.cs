@@ -47,33 +47,54 @@ public class OutboxPublisherService : BackgroundService
         var db = scope.ServiceProvider.GetRequiredService<TimecardDbContext>();
         var publisher = scope.ServiceProvider.GetRequiredService<IEventPublisher>();
 
+        using var tx = await db.Database.BeginTransactionAsync(ct);
+
         var events = await db.EventOutbox
-            .Where(e => e.ProcessedAt == null)
-            .OrderBy(e => e.OccurredAt)
-            .Take(10) // This should come from config.
+            .FromSqlRaw(@"
+            SELECT *
+            FROM event_outbox
+            WHERE processed_at IS NULL
+              AND locked_at IS NULL
+            ORDER BY occurred_at
+            FOR UPDATE SKIP LOCKED
+            LIMIT 10
+        ")
             .ToListAsync(ct);
 
+        if (events.Count == 0)
+            return;
+
+        var now = DateTime.UtcNow;
+
+        foreach (var evt in events)
+        {
+            evt.LockedAt = now;
+        }
+
+        await db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
+
+        // 🔽 publish OUTSIDE the transaction
         foreach (var evt in events)
         {
             try
             {
                 await publisher.PublishAsync(
                     routingKey: "timecard.created",
-                    message: Encoding.UTF8.GetBytes(evt.Payload.ToString() ?? string.Empty)
+                    message: evt.Payload
                 );
 
                 evt.ProcessedAt = DateTime.UtcNow;
+                evt.LockedAt = null;
+
                 await db.SaveChangesAsync(ct);
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogWarning(
-                    ex,
-                    "Failed to publish outbox event {EventId}. Will retry.",
-                    evt.Id);
-
-                // DO NOT mark processed
-                // retry will happen naturally
+                // release lock for retry
+                evt.LockedAt = null;
+                await db.SaveChangesAsync(ct);
+                throw;
             }
         }
     }
