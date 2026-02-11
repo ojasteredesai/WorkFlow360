@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: timecard-service
+  namespace: workflow360
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: timecard-service
+  template:
+    metadata:
+      labels:
+        app: timecard-service
+    spec:
+      containers:
+        - name: timecard-service
+          image: workflow360/timecard-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: timecard-config

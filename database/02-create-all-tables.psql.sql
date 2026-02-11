@@ -26,6 +26,25 @@ CREATE INDEX IF NOT EXISTS idx_timecards_worker
 
 CREATE INDEX IF NOT EXISTS idx_timecards_project
     ON timecards(project_id);
+	
+-- 1️⃣ Ensure table exists
+CREATE TABLE IF NOT EXISTS event_outbox (
+    id UUID PRIMARY KEY,
+    event_type TEXT NOT NULL,
+    payload JSONB NOT NULL,
+    occurred_at TIMESTAMPTZ NOT NULL,
+    processed_at TIMESTAMPTZ NULL,
+    locked_at TIMESTAMPTZ NULL
+);
+
+-- 2️⃣ Index for unprocessed events (CRITICAL)
+CREATE INDEX IF NOT EXISTS idx_event_outbox_unprocessed
+ON event_outbox (occurred_at)
+WHERE processed_at IS NULL AND locked_at IS NULL;
+
+-- 3️⃣ Index for lock handling
+CREATE INDEX IF NOT EXISTS idx_event_outbox_locked
+ON event_outbox (locked_at);	
 
 -- =========================================================
 -- EXPENSE SERVICE DATABASE

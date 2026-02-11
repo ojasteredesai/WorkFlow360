@@ -1,0 +1,32 @@
+Run these from repo root (WorkFlow360):
+
+postgres commands
+
+kubectl apply -f k8s/secrets/postgres-secret.yaml
+kubectl apply -f k8s/storage/postgres-pvc.yaml
+kubectl apply -f k8s/services/postgres.yaml
+kubectl apply -f k8s/statefulsets/postgres.yaml
+kubectl get pods -n workflow360
+
+
+kubectl exec -n workflow360 postgres-0 -- pg_isready
+
+
+RabbitMQ commands
+
+kubectl apply -f k8s/secrets/rabbitmq-secret.yaml
+kubectl apply -f k8s/services/rabbitmq.yaml
+kubectl apply -f k8s/statefulsets/rabbitmq.yaml
+
+timecards commands
+
+kubectl apply -f k8s/configmaps/timecard-config.yaml
+kubectl apply -f k8s/deployments/timecard-service.yaml
+kubectl apply -f k8s/services/timecard-service.yaml
+
+
+kubectl get pods -n workflow360
+
+
+
+

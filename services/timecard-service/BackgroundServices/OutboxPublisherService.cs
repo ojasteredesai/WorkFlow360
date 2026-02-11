@@ -1,5 +1,3 @@
-using System.Text;
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -13,6 +11,10 @@ public class OutboxPublisherService : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<OutboxPublisherService> _logger;
+
+    // keep polling interval explicit (later move to config)
+    private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan RetryDelay   = TimeSpan.FromSeconds(5);
 
     public OutboxPublisherService(
         IServiceScopeFactory scopeFactory,
@@ -31,13 +33,24 @@ public class OutboxPublisherService : BackgroundService
             try
             {
                 await PublishPendingEvents(stoppingToken);
+                await Task.Delay(PollInterval, stoppingToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // normal shutdown
+                break;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Outbox publishing failed");
-            }
+                // 🔑 KEY CHANGE:
+                // Do NOT crash, do NOT stop the service.
+                // Treat this as infra unavailability (RabbitMQ, network, etc.)
+                _logger.LogWarning(
+                    ex,
+                    "Outbox publishing failed (likely infra not ready). Will retry.");
 
-            await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken); // This should come from config.
+                await Task.Delay(RetryDelay, stoppingToken);
+            }
         }
     }
 
@@ -51,14 +64,14 @@ public class OutboxPublisherService : BackgroundService
 
         var events = await db.EventOutbox
             .FromSqlRaw(@"
-            SELECT *
-            FROM event_outbox
-            WHERE processed_at IS NULL
-              AND locked_at IS NULL
-            ORDER BY occurred_at
-            FOR UPDATE SKIP LOCKED
-            LIMIT 10
-        ")
+                SELECT *
+                FROM event_outbox
+                WHERE processed_at IS NULL
+                  AND locked_at IS NULL
+                ORDER BY occurred_at
+                FOR UPDATE SKIP LOCKED
+                LIMIT 10
+            ")
             .ToListAsync(ct);
 
         if (events.Count == 0)
@@ -86,14 +99,21 @@ public class OutboxPublisherService : BackgroundService
 
                 evt.ProcessedAt = DateTime.UtcNow;
                 evt.LockedAt = null;
-
                 await db.SaveChangesAsync(ct);
             }
-            catch
+            catch (Exception ex)
             {
-                // release lock for retry
+                // 🔑 KEY CHANGE:
+                // Release lock and let retry loop handle recovery.
+                _logger.LogWarning(
+                    ex,
+                    "Failed to publish outbox event {EventId}. Releasing lock.",
+                    evt.Id);
+
                 evt.LockedAt = null;
                 await db.SaveChangesAsync(ct);
+
+                // bubble up to outer loop → retry with delay
                 throw;
             }
         }
