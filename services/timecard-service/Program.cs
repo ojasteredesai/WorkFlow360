@@ -49,7 +49,7 @@ builder.Services.AddSingleton<RabbitMqConnectionFactory>();
 builder.Services.AddSingleton<RabbitMqConnection>();
 
 // --------------------
-// Background services
+// Background services 
 // --------------------
 builder.Services.AddHostedService<OutboxPublisherService>();
 
