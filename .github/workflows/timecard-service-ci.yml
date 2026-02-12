@@ -1,4 +1,4 @@
-name: TimecardServiceCI
+name: TimecardServiceRelease
 
 on:
   push:
@@ -8,22 +8,27 @@ on:
       - "services/timecard-service/**"
 
 jobs:
-  ci:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
 
-      - name: Build Docker image
+      - name: Configure kubeconfig
         run: |
-          docker build \
-            -t ojasteredesai/timecard-service:${{ github.sha }} \
-            services/timecard-service
+          echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig
+          export KUBECONFIG=$PWD/kubeconfig
 
-      - name: Push Docker image
+      - name: Deploy image to Kubernetes
         run: |
-          docker push ojasteredesai/timecard-service:${{ github.sha }}
+          kubectl set image deployment/timecard-service \
+          timecard-service=ojasteredesai/timecard-service:${{ github.sha }} \
+          -n workflow360
+
+      - name: Verify rollout
+        run: |
+          kubectl rollout status deployment/timecard-service -n workflow360
