@@ -10,12 +10,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source code
+      - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Build Docker image
         run: |
-          docker build -t ojasteredesai/timecard-service:${{ github.sha }} ./services/timecard-service
+          docker build \
+            -t ojasteredesai/timecard-service:${{ github.sha }} \
+            services/timecard-service
 
       - name: Push Docker image
         run: |
