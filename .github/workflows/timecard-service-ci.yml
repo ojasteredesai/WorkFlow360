@@ -2,6 +2,8 @@ name: TimecardServiceCI
 
 on:
   push:
+    branches:
+      - main
     paths:
       - "services/timecard-service/**"
 
