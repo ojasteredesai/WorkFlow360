@@ -27,4 +27,3 @@ jobs:
       - name: Push Docker image
         run: |
           docker push ojasteredesai/timecard-service:${{ github.sha }}
-          
