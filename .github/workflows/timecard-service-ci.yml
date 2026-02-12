@@ -13,8 +13,10 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Build Docker image (CI validation only)
+      - name: Build Docker image
         run: |
-          docker build \
-            -t timecard-service-ci:${{ github.sha }} \
-            services/timecard-service
+          docker build -t ojasteredesai/timecard-service:${{ github.sha }} ./services/timecard-service
+
+      - name: Push Docker image
+        run: |
+          docker push ojasteredesai/timecard-service:${{ github.sha }}

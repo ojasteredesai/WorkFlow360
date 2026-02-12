@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
         - name: timecard-service
-          image: workflow360/timecard-service:latest
-          imagePullPolicy: Never
+          image: ojasteredesai/timecard-service:placeholder
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
           envFrom:
