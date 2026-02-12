@@ -1,4 +1,4 @@
-name: Timecard Service – CI
+name: Timecard Service CI
 
 on:
   push:
