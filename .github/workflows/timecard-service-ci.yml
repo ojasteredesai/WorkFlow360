@@ -1,13 +1,10 @@
-name: Timecard Service CI
+name: TimecardServiceCI
 
 on:
   push:
-    branches:
-      - main
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Print Hello
-        run: echo "CI is working"
+      - run: echo "CI works"
