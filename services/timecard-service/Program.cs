@@ -4,6 +4,10 @@ using TimecardService.BackgroundServices;
 using TimecardService.Data;
 using TimecardService.Messaging;
 using TimecardService.Messaging.RabbitMQ;
+using Polly;
+using Polly.Extensions.Http;
+using Polly.Timeout;
+using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,7 +56,14 @@ builder.Services.AddSingleton<RabbitMqConnection>();
 // Background services
 // --------------------
 builder.Services.AddHostedService<OutboxPublisherService>();
-
+// Add HttpClient with Polly policies
+builder.Services.AddHttpClient("FraudService", client =>
+{
+    client.BaseAddress = new Uri("https://fraud-api.example.com/");
+})
+.AddPolicyHandler(GetRetryPolicy())
+.AddPolicyHandler(GetCircuitBreakerPolicy())
+.AddPolicyHandler(GetTimeoutPolicy());
 // --------------------
 // Build & Run
 // --------------------
@@ -65,3 +76,42 @@ app.UseHttpsRedirection();
 app.MapControllers();
 
 app.Run();
+
+// ---------------- POLICIES ---------------- //
+
+static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
+{
+    return HttpPolicyExtensions
+        .HandleTransientHttpError()
+        .Or<TimeoutRejectedException>()
+        .WaitAndRetryAsync(
+            3,
+            retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+            (result, timeSpan, retryCount, context) =>
+            {
+                Console.WriteLine($"Retry {retryCount} after {timeSpan.TotalSeconds}s");
+            });
+}
+
+static IAsyncPolicy<HttpResponseMessage> GetCircuitBreakerPolicy()
+{
+    return HttpPolicyExtensions
+        .HandleTransientHttpError()
+        .Or<TimeoutRejectedException>()
+        .CircuitBreakerAsync(
+            5, // break after 5 consecutive failures
+            TimeSpan.FromSeconds(30),
+            onBreak: (result, breakDelay) =>
+            {
+                Console.WriteLine("Circuit opened!");
+            },
+            onReset: () =>
+            {
+                Console.WriteLine("Circuit closed!");
+            });
+}
+
+static IAsyncPolicy<HttpResponseMessage> GetTimeoutPolicy()
+{
+    return Policy.TimeoutAsync<HttpResponseMessage>(5); // 5 second timeout
+}

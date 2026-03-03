@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
         - name: timecard-service
-          image: ojasteredesai/timecard-service:placeholder
-          imagePullPolicy: IfNotPresent
+          image: ojasteredesai/timecard-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           envFrom:
